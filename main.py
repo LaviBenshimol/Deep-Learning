@@ -15,6 +15,7 @@ def initialize_parameters(layer_dims):
 
 #Lavi is my partner
 #Testing 2
+#this is new info lavi
 
 """
 # Input Arguments: A,W,b
