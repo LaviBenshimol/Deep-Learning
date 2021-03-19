@@ -13,6 +13,8 @@ def initialize_parameters(layer_dims):
         init_dictionary['b' + str(i)] = np.zeros((layer_dims[i],1))
     return init_dictionary
 
+#Lavi is my partner
+
 """
 # Input Arguments: A,W,b
 # Dimensions of input Arguemtns:
