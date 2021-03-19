@@ -77,6 +77,13 @@ def linear_activation_forward(A_prev, W, B, activation):
     return A,cache
 
 
+def apply_batchnorm(A)
+    eps = 1e-6
+    meanA = np.mean(A)
+    stdA = np.std(A)
+    stdA_eps = np.sqrt(stdA^2 + eps)
+    NA = A - meanA / stdA_eps
+    return NA
 
 
 # 1.f - this function opperates on all layers starting from Layer0 = X
@@ -89,6 +96,8 @@ def L_model_forward(X, parameters, use_batchnorm):
     for l in range(1, L):
         A_prev = A
         A, cache = linear_activation_forward(A_prev, parameters['W%s' % l], parameters['b%s' % l], 'relu')
+        if use_batchnorm == True:
+            A = apply_batchnorm(A)
         caches.append(cache)
 
     #Layter L+1 activate by Softmax function
