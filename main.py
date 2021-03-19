@@ -13,12 +13,9 @@ def initialize_parameters(layer_dims):
         init_dictionary['b' + str(i)] = np.zeros((layer_dims[i],1))
     return init_dictionary
 
-#Lavi is my partner
-#Testing 2
-#this is new info lavi
 
 """
-# Input Arguments: A,W,b,x,y   
+# Input Arguments: A,W,b 
 # Dimensions of input Arguemtns:
 #   |A| = L_i x 1
 #   |W| = L_i x L_i-1
@@ -54,19 +51,23 @@ Output Argument: A
 Dimension of output Argument:
 |A| = L_i x 1
 """
+
+# c
 def softmax(Z):
     sumExpZ = sum(np.exp(Z))
     A = np.exp(Z) / sumExpZ
     activation_cache = Z
     return A,activation_cache
 
-def relu(z):
+# d
+def relu(Z):
     activation_cache = Z
-    A = np.maximum(z, 0)
+    A = np.maximum(Z, 0)
     return A,activation_cache
 
+# e
 def linear_activation_forward(A_prev, W, B, activation):
-    Z,linear_cache = linear_forward(A_prev,W,b)
+    Z,linear_cache = linear_forward(A_prev,W,B)
     if (activation == 'relu'):
         A,activation_cache = relu(Z)
     if (activation == 'softmax'):
@@ -76,24 +77,30 @@ def linear_activation_forward(A_prev, W, B, activation):
     return A,cache
 
 
-#This function is not clear to me yet
+
+
+# f - this function opperates on all layers starting from Layer0 = X
 def L_model_forward(X, parameters, use_batchnorm):
     caches = []
     A = X
     L = len(parameters) // 2  # number of layers in the neural network
 
-    # Implement [LINEAR -> RELU]*(L-1). Add "cache" to the "caches" list.
+    #Layeres 1:L activate by Relu function
     for l in range(1, L):
         A_prev = A
-        ### START CODE HERE ### (≈ 2 lines of code)
         A, cache = linear_activation_forward(A_prev, parameters['W%s' % l], parameters['b%s' % l], 'relu')
         caches.append(cache)
-        ### END CODE HERE ###
 
-    # Implement LINEAR -> SIGMOID. Add "cache" to the "caches" list.
-    ### START CODE HERE ### (≈ 2 lines of code)
-    AL, cache = linear_activation_forward(A, parameters['W%s' % str(l + 1)], parameters['b%s' % str(l + 1)], 'sigmoid')
+    #Layter L+1 activate by Softmax function
+    AL, cache = linear_activation_forward(A, parameters['W%s' % str(l + 1)], parameters['b%s' % str(l + 1)], 'softmax')
     caches.append(caches)
-    ### END CODE HERE ###
-    assert (AL.shape == (1, X.shape[1]))
     return AL, cache
+
+
+
+X = [0.5 , 0.6 , 0.7]
+dimArray = [3,4,3]
+parameters = initialize_parameters(dimArray)
+use_batchnorm = False
+AL, cache = L_model_forward(X, parameters,use_batchnorm )
+print('Finished')
