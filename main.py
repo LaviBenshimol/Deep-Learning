@@ -16,10 +16,9 @@ def initialize_parameters(layer_dims):
 #Lavi is my partner
 #Testing 2
 #this is new info lavi
-#kishkos
 
 """
-# Input Arguments: A,W,b
+# Input Arguments: A,W,b,Z,w
 # Dimensions of input Arguemtns:
 #   |A| = L_i x 1
 #   |W| = L_i x L_i-1
