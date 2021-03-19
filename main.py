@@ -1,6 +1,6 @@
 import numpy as np
 
-# a - This function initialize the Weights matrices and bias vectors for each layer
+# 1.a - This function initialize the Weights matrices and bias vectors for each layer
 def initialize_parameters(layer_dims):
     #output array
     init_dictionary = {}
@@ -25,7 +25,7 @@ def initialize_parameters(layer_dims):
 # Dimension of output Argument:
 # |Z| = L_i x 1
 """
-# b - This function performs the linear part of a layer's forward propagation
+# 1.b - This function performs the linear part of a layer's forward propagation
 def linear_forward(A, W, b):
     Z = np.dot(W,A)+b
     linear_cache = (A, W, b)
@@ -52,20 +52,20 @@ Dimension of output Argument:
 |A| = L_i x 1
 """
 
-# c
+# 1.c
 def softmax(Z):
     sumExpZ = sum(np.exp(Z))
     A = np.exp(Z) / sumExpZ
     activation_cache = Z
     return A,activation_cache
 
-# d
+# 1.d
 def relu(Z):
     activation_cache = Z
     A = np.maximum(Z, 0)
     return A,activation_cache
 
-# e
+# 1.e
 def linear_activation_forward(A_prev, W, B, activation):
     Z,linear_cache = linear_forward(A_prev,W,B)
     if (activation == 'relu'):
@@ -79,7 +79,7 @@ def linear_activation_forward(A_prev, W, B, activation):
 
 
 
-# f - this function opperates on all layers starting from Layer0 = X
+# 1.f - this function opperates on all layers starting from Layer0 = X
 def L_model_forward(X, parameters, use_batchnorm):
     caches = []
     A = X
@@ -97,6 +97,40 @@ def L_model_forward(X, parameters, use_batchnorm):
     return AL, cache
 
 
+# 1.g
+def compute_cost(AL,Y):
+    """""
+    calculate categorical cross-entropy loss using the formula
+    Input:
+    AL -- probability vector. shape:(1, #examples)
+    Y -- correct lable vector (1 - true,0 - false). shape:(1, #exammples)
+    Output:
+    categorical cross-entropy loss
+    """""
+    m = Y.shape[1]
+    cost = -np.sum(np.multiply(Y, np.log(AL)) + np.multiply(np.ones(Y.shape) - Y, np.log(AL))) / m
+    cost = np.squeeze(cost) #simplify shape
+    return cost
+
+#2.a
+def Linear_backward(dZ,cache):
+    """""
+    backward propagation process for a single layer
+    Input:
+    dZ - the gradient of the cost with respect to the linear output of the current layer (layer l)
+    cache - tuple of values (A_prev, W, b) coming from the forward propagation in the current layer
+    Output:
+    dA_prev -- Gradient of the cost with respect to the activation (of the previous layer l-1), same shape as A_prev
+    dW -- Gradient of the cost with respect to W (current layer l), same shape as W
+    db -- Gradient of the cost with respect to b (current layer l), same shape as b
+    """""
+    A_prev, W, b = cache
+    m = a_prev.shape[1]
+    dW = np.dot(dZ,A_prev.T) / m
+    db = np.sum(dZ, axis=1,keepdims=True) / m
+    dA_prev = np.dot(W.T, dZ)
+
+    return dA_prev,dW,db
 
 X = [0.5 , 0.6 , 0.7]
 dimArray = [3,4,3]
