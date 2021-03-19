@@ -18,7 +18,7 @@ def initialize_parameters(layer_dims):
 #this is new info lavi
 
 """
-# Input Arguments: A,W,b,Z,w
+# Input Arguments: A,W,b
 # Dimensions of input Arguemtns:
 #   |A| = L_i x 1
 #   |W| = L_i x L_i-1
