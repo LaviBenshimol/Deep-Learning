@@ -112,7 +112,7 @@ def compute_cost(AL,Y):
     cost = np.squeeze(cost) #simplify shape
     return cost
 
-#2.a
+# 2.a
 def Linear_backward(dZ,cache):
     """""
     backward propagation process for a single layer
@@ -125,11 +125,12 @@ def Linear_backward(dZ,cache):
     db -- Gradient of the cost with respect to b (current layer l), same shape as b
     """""
     A_prev, W, b = cache
-    m = a_prev.shape[1]
+    m = len(A_prev)
     dW = np.dot(dZ,A_prev.T) / m
     db = np.sum(dZ, axis=1,keepdims=True) / m
     dA_prev = np.dot(W.T, dZ)
 
+    assert (db == b.shape)
     return dA_prev,dW,db
 
 X = [0.5 , 0.6 , 0.7]
