@@ -14,6 +14,7 @@ def initialize_parameters(layer_dims):
     return init_dictionary
 
 #Lavi is my partner
+#Testing 2
 
 """
 # Input Arguments: A,W,b
