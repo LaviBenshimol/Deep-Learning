@@ -142,6 +142,52 @@ def Linear_backward(dZ,cache):
     assert (db == b.shape)
     return dA_prev,dW,db
 
+# 2.c
+def relu_backward(dA, activation_cache):
+    """
+    The backward propagation for a single RELU unit.
+    Arguments:
+    dA - post-activation gradient, of any shape
+    activation_cache - 'Z' where we store for computing backward propagation efficiently
+    Returns:
+    dZ - Gradient of the cost with respect to Z
+    """
+    Z = activation_cache
+    # just converting dz to a correct object.
+    dZ = np.array(dA, copy=True)
+    # When z < 0, we should set dz to 0 as well.
+    dZ[Z < 0] = 0
+    return dZ
+
+# 2.d
+def softmax_backward (dA, activation_cache):
+    Z = activation_cache
+    lenZ = len(Z)
+    expZ = np.exp(Z)
+    sumExpZ = sum(expZ)
+    Softmax = expZ / sumExpZ
+    dSoftmax = np.zeros((lenZ,lenZ))
+    for i in range(lenZ):
+        for j in range(lenZ):
+            if (i!=j):
+                dSoftmax[i][j] = -dSoftmax[i] * dSoftmax[j]
+            else:
+                dSoftmax[i][j] = dSoftmax[i] *(1- dSoftmax[j])
+
+    dZ = dA * dSoftmax
+    return dZ
+
+"""
+A = softmax(Z)
+def softmax(Z):
+    sumExpZ = sum(np.exp(Z))
+    A = np.exp(Z) / sumExpZ
+    activation_cache = Z
+    return A,activation_cache
+    
+"""
+
+
 X = [0.5 , 0.6 , 0.7]
 dimArray = [3,4,3]
 parameters = initialize_parameters(dimArray)
