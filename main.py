@@ -4,6 +4,21 @@ from keras.datasets import mnist
 # Load MNIST data
 (x_train, y_train), (x_test,y_test) = mnist.load_data()
 
+""""
+print('Train: X=%s, y=%s' % (x_train.shape, y_train.shape))
+print('Test: X=%s, y=%s' % (x_test.shape, y_test.shape))
+# plot first few images
+for i in range(9):
+	# define subplot
+	pyplot.subplot(330 + 1 + i)
+	# plot raw pixel data
+	pyplot.imshow(x_train[i], cmap=pyplot.get_cmap('gray'))
+# show the figure
+pyplot.show()
+print("after downloading the data")
+"""
+# Load MNIST data
+
 # 1.a - This function initialize the Weights matrices and bias vectors for each layer
 def initialize_parameters(layer_dims):
     #output array
@@ -273,9 +288,13 @@ def Predict(X, Y, parameters):
     return labelID
 
 
-X = [0.5 , 0.6 , 0.7]
-dimArray = [3,4,3]
+
+dimArray = [20,7,5,10]
 parameters = initialize_parameters(dimArray)
 use_batchnorm = False
-AL, cache = L_model_forward(X, parameters,use_batchnorm )
+learning_rate = 0.009
+x_train_reshape = x_train.reshape(x_train.shape[0],784)
+L_layer_model(x_train_reshape,y_train,dimArray,learning_rate,parameters)
+x_test_reshape = x_test.reshape(x_test.shape[0],784)
+AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
 print('Finished')
