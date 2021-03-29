@@ -1,4 +1,8 @@
 import numpy as np
+from keras.datasets import mnist
+
+# Load MNIST data
+(x_train, y_train), (x_test,y_test) = mnist.load_data()
 
 # 1.a - This function initialize the Weights matrices and bias vectors for each layer
 def initialize_parameters(layer_dims):
@@ -77,7 +81,7 @@ def linear_activation_forward(A_prev, W, B, activation):
     return A,cache
 
 
-def apply_batchnorm(A)
+def apply_batchnorm(A):
     eps = 1e-6
     meanA = np.mean(A)
     stdA = np.std(A)
@@ -142,6 +146,20 @@ def Linear_backward(dZ,cache):
     assert (db == b.shape)
     return dA_prev,dW,db
 
+# 2.b
+def linear_activation_backward(dA, cache, activation):
+#TODO: add doc
+    linear_cache, activation_cache = cache
+
+    if activation == "relu":
+        dZ = relu_backward(dA, activation_cache)
+    elif activation == "softmax":
+        dZ = softmax_backward(dA, activation_cache)
+
+    dA_prev, dW, db = Linear_backward(dZ, linear_cache)
+
+    return dA_prev, dW, db
+
 # 2.c
 def relu_backward(dA, activation_cache):
     """
@@ -177,15 +195,82 @@ def softmax_backward (dA, activation_cache):
     dZ = dA * dSoftmax
     return dZ
 
-"""
-A = softmax(Z)
-def softmax(Z):
-    sumExpZ = sum(np.exp(Z))
-    A = np.exp(Z) / sumExpZ
-    activation_cache = Z
-    return A,activation_cache
-    
-"""
+# 2.e
+def L_model_backward(AL, Y, caches):
+    """
+    Implement the backward propagation for the [LINEAR->RELU] * (L-1) -> LINEAR -> SIGMOID group
+    Arguments:
+    AL -- probability vector, output of the forward propagation (L_model_forward())
+    Y -- true "label" vector (containing 0 if non-cat, 1 if cat)
+    caches -- list of caches containing:
+                every cache of linear_activation_forward() with "relu" (it's caches[l], for l in range(L-1) i.e l = 0...L-2)
+                the cache of linear_activation_forward() with "sigmoid" (it's caches[L-1])
+    Returns:
+    grads -- A dictionary with the gradients
+             grads["dA" + str(l)] = ...
+             grads["dW" + str(l)] = ...
+             grads["db" + str(l)] = ...
+    """
+    grads = {}
+    L = len(caches)  # the number of layers
+    m = AL.shape[1]
+    Y = Y.reshape(AL.shape)  # after this line, Y is the same shape as AL
+
+    # Initializing the backpropagation
+    ### START CODE HERE ### (1 line of code)
+    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
+    ### END CODE HERE ###
+
+    # Lth layer (SIGMOID -> LINEAR) gradients. Inputs: "AL, Y, caches". Outputs: "grads["dAL"], grads["dWL"], grads["dbL"]
+    ### START CODE HERE ### (approx. 2 lines)
+    current_cache = caches[L - 1]
+    grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = linear_activation_backward(dAL, current_cache,
+                                                                                                  'softmax')
+    ### END CODE HERE ###
+
+    for l in reversed(range(L - 1)):
+        # lth layer: (RELU -> LINEAR) gradients.
+        # Inputs: "grads["dA" + str(l + 2)], caches".
+        # Outputs: "grads["dA" + str(l + 1)] , grads["dW" + str(l + 1)] , grads["db" + str(l + 1)]
+        ### START CODE HERE ### (approx. 5 lines)
+        current_cache = caches[l]
+        dA_prev_temp, dW_temp, db_temp = linear_activation_backward(grads["dA" + str(l + 2)], current_cache, 'relu')
+        grads["dA" + str(l + 1)] = dA_prev_temp
+        grads["dW" + str(l + 1)] = dW_temp
+        grads["db" + str(l + 1)] = db_temp
+        ### END CODE HERE ###
+
+    return grads
+# 2.f
+def update_parameters(parameters, grads, learning_rate):
+#TODO: add doc
+    L = len(parameters) // 2  # number of layers in the neural network
+
+    # Update rule for each parameter. Use a for loop.
+    ### START CODE HERE ### (≈ 3 lines of code)
+    for l in range(1, L + 1, 1):
+        parameters["W" + str(l)] = parameters["W" + str(l)] - learning_rate * grads["dW" + str(l)]
+        parameters["b" + str(l)] = parameters["b" + str(l)] - learning_rate * grads["db" + str(l)]
+    ### END CODE HERE ###
+    return parameters
+
+# 3.a
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
+    parameters = initialize_parameters(layers_dims)
+    use_batchnorm = False
+    AL, cache = L_model_forward(X, parameters, use_batchnorm)
+    cost = compute_cost(AL,Y)
+    grads = L_model_backward(AL, Y, cache)
+    parameters = update_parameters(parameters,grads, learning_rate)
+
+    return parameters, cost
+
+# 3.b
+def Predict(X, Y, parameters):
+    use_batchnorm = False
+    AL, cache = L_model_forward(X,parameters,use_batchnorm)
+    labelID = np.argmax(AL)
+    return labelID
 
 
 X = [0.5 , 0.6 , 0.7]
