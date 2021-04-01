@@ -1,8 +1,6 @@
 import numpy as np
 from keras.datasets import mnist
 
-# Load MNIST data
-(x_train, y_train), (x_test,y_test) = mnist.load_data()
 
 """"
 print('Train: X=%s, y=%s' % (x_train.shape, y_train.shape))
@@ -271,14 +269,27 @@ def update_parameters(parameters, grads, learning_rate):
 
 # 3.a
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
+
     parameters = initialize_parameters(layers_dims)
     use_batchnorm = False
-    AL, cache = L_model_forward(X, parameters, use_batchnorm)
+
     cost = compute_cost(AL,Y)
     grads = L_model_backward(AL, Y, cache)
     parameters = update_parameters(parameters,grads, learning_rate)
 
     return parameters, cost
+
+    for i in range(0,num_of_iteration):
+        #foward propagation
+        AL, cache = L_model_forward(X, parameters, use_batchnorm)
+        cost = compute_cost(AL, Y)
+        grads = L_model_backward(AL, Y, cache)
+        parameters = update_parameters(parameters, grads, learning_rate)
+    # Print the cost every 100 training example
+        if print_cost and i % 100 == 0:
+            print("Cost after iteration %i: %f" % (i, cost))
+        if print_cost and i % 100 == 0:
+            costs.append(cost)
 
 # 3.b
 def Predict(X, Y, parameters):
@@ -286,15 +297,29 @@ def Predict(X, Y, parameters):
     AL, cache = L_model_forward(X,parameters,use_batchnorm)
     labelID = np.argmax(AL)
     return labelID
+#from sklearn.preprocessing import label_binarize
 
+#TODO:def arrange_dims(X,Y):
 
+# Load MNIST data
+(x_train, y_train), (x_test,y_test) = mnist.load_data()
+numOfClasses = len(np.unique(y_train))
+y_train_reshape = np.zeros((len(y_train),numOfClasses))
+for i in range(len(y_train)):
+    y_train_reshape[i][y_train[i]] = 1
 
 dimArray = [20,7,5,10]
 parameters = initialize_parameters(dimArray)
 use_batchnorm = False
 learning_rate = 0.009
+num_of_iteration = 100
+batch_size = len(y_train) / num_of_iteration
+
 x_train_reshape = x_train.reshape(x_train.shape[0],784)
-L_layer_model(x_train_reshape,y_train,dimArray,learning_rate,parameters)
-x_test_reshape = x_test.reshape(x_test.shape[0],784)
-AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
+
+#L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
+
+parameters , cost = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iteration,batch_size)
+#x_test_reshape = x_test.reshape(x_test.shape[0],784)
+#AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
 print('Finished')
