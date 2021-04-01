@@ -1,6 +1,6 @@
 import numpy as np
 from keras.datasets import mnist
-
+import tensorflow as tf
 
 """"
 print('Train: X=%s, y=%s' % (x_train.shape, y_train.shape))
@@ -89,7 +89,6 @@ def linear_activation_forward(A_prev, W, B, activation):
         A,activation_cache = relu(Z)
     if (activation == 'softmax'):
         A,activation_cache = softmax(Z)
-
     cache = (linear_cache, activation_cache)
     return A,cache
 
@@ -117,10 +116,10 @@ def L_model_forward(X, parameters, use_batchnorm):
             A = apply_batchnorm(A)
         caches.append(cache)
 
-    #Layter L+1 activate by Softmax function
+    #Layer L+1 activate by Softmax function
     AL, cache = linear_activation_forward(A, parameters['W%s' % str(l + 1)], parameters['b%s' % str(l + 1)], 'softmax')
-    caches.append(caches)
-    return AL, cache
+    caches.append(cache)
+    return AL, caches
 
 
 # 1.g
@@ -272,25 +271,21 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
 
     parameters = initialize_parameters(layers_dims)
     use_batchnorm = False
+    cost = []
+    #size: (batchSize,1), rangeValues = (0:60,000-1)
 
-    cost = compute_cost(AL,Y)
-    grads = L_model_backward(AL, Y, cache)
-    parameters = update_parameters(parameters,grads, learning_rate)
-
-    return parameters, cost
 
     for i in range(0,num_of_iteration):
+        randIndices = np.random.choice(X.shape[0], int(batch_size))
+        X_batch = X[randIndices].transpose()
+        Y_batch = Y[randIndices].transpose()
         #foward propagation
-        AL, cache = L_model_forward(X, parameters, use_batchnorm)
-        cost = compute_cost(AL, Y)
-        grads = L_model_backward(AL, Y, cache)
+        AL, cache = L_model_forward(X_batch, parameters, use_batchnorm)
+        cost = compute_cost(AL, Y_batch)
+        grads = L_model_backward(AL, Y_batch, cache)
         parameters = update_parameters(parameters, grads, learning_rate)
     # Print the cost every 100 training example
-        if print_cost and i % 100 == 0:
-            print("Cost after iteration %i: %f" % (i, cost))
-        if print_cost and i % 100 == 0:
-            costs.append(cost)
-
+    return parameters, cost
 # 3.b
 def Predict(X, Y, parameters):
     use_batchnorm = False
@@ -303,23 +298,30 @@ def Predict(X, Y, parameters):
 
 # Load MNIST data
 (x_train, y_train), (x_test,y_test) = mnist.load_data()
+
+#CACHE:
+# linear_cache = A - input of the layer(in size of the current layer), W - Weights matrix, b - biases
+# activation_cache  = Z values = A*W + b
 numOfClasses = len(np.unique(y_train))
+lenImageFlattened = x_train.shape[1] *  x_train.shape[2]
 y_train_reshape = np.zeros((len(y_train),numOfClasses))
 for i in range(len(y_train)):
     y_train_reshape[i][y_train[i]] = 1
 
-dimArray = [20,7,5,10]
-parameters = initialize_parameters(dimArray)
 use_batchnorm = False
 learning_rate = 0.009
 num_of_iteration = 100
-batch_size = len(y_train) / num_of_iteration
 
-x_train_reshape = x_train.reshape(x_train.shape[0],784)
+batch_size = len(y_train) / num_of_iteration
+dimArray = [20,7,5,10]
+dimArray.append(numOfClasses)
+dimArray.insert(0,lenImageFlattened)
+
+x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
 
 #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
 
-parameters , cost = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iteration,batch_size)
+(parameters, cost) = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iteration,batch_size)
 #x_test_reshape = x_test.reshape(x_test.shape[0],784)
 #AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
 print('Finished')
