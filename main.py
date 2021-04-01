@@ -291,6 +291,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
         #foward propagation
         AL, cache = L_model_forward(X_batch, parameters, use_batchnorm)
         cost = compute_cost(AL, Y_batch)
+        print (cost)
         grads = L_model_backward(AL, Y_batch, cache)
         parameters = update_parameters(parameters, grads, learning_rate)
     # Print the cost every 100 training example
