@@ -155,7 +155,6 @@ def Linear_backward(dZ,cache):
     db = np.sum(dZ, axis=1,keepdims=True) / m
     dA_prev = np.dot(W.T, dZ)
 
-    assert (db == b.shape)
     return dA_prev,dW,db
 
 # 2.b
@@ -190,21 +189,31 @@ def relu_backward(dA, activation_cache):
     return dZ
 
 # 2.d
-def softmax_backward (dA, activation_cache):
+def softmax_backward(dA, activation_cache):
     Z = activation_cache
     lenZ = len(Z)
     expZ = np.exp(Z)
     sumExpZ = sum(expZ)
     Softmax = expZ / sumExpZ
     dSoftmax = np.zeros((lenZ,lenZ))
-    for i in range(lenZ):
-        for j in range(lenZ):
-            if (i!=j):
-                dSoftmax[i][j] = -dSoftmax[i] * dSoftmax[j]
-            else:
-                dSoftmax[i][j] = dSoftmax[i] *(1- dSoftmax[j])
 
-    dZ = dA * dSoftmax
+    dZ = np.zeros(dA.shape)
+
+    for iExample in range(Softmax.shape[1]):
+        iExampleSoftmax = np.expand_dims(Softmax[:, iExample], axis=-1)
+        dSoftmaxTemp = -1 * iExampleSoftmax * np.transpose(iExampleSoftmax)
+        for i in range(lenZ):
+            dSoftmaxTemp[i,i] -= iExampleSoftmax[i]
+        dZ[:,iExample] = np.matmul(dSoftmaxTemp, dA[:,iExample])
+
+    return dZ
+
+
+# Hodaya's reference - unclear from where this pars is true: "np.multiply(dA, s, (1 - s))"
+def softmax_backward2(dA, activation_cache):
+    z = activation_cache
+    s = (np.exp(z).T / np.array((np.sum(np.exp(z), axis=1).T))).T
+    dZ = np.multiply(dA, s, (1 - s))    # wtf
     return dZ
 
 # 2.e
