@@ -328,8 +328,8 @@ def getMnistFlatData():
     # Load MNIST data
     (x_train, y_train), (x_test,y_test) = mnist.load_data()
     max_x_train = max(x_train.reshape((x_train.shape[0] * x_train.shape[1] * x_train.shape[2])))
-    x_train = (x_train - max_x_train / 2) / max_x_train
-    # x_train = x_train / max_x_train
+    #x_train = (x_train - max_x_train / 2) / max_x_train
+    x_train = x_train / max_x_train
     numOfClasses = len(np.unique(y_train))
     lenImageFlattened = x_train.shape[1] *  x_train.shape[2]
     x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
@@ -348,8 +348,8 @@ def getMnistFlatData():
 x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlatData()
 use_batchnorm = False
 learning_rate = 0.009      # Hard Coded Value is: 0.009
-batch_size = 32
-num_of_iterations = 5000      #y_train_reshape.shape[0] // batch_size
+batch_size = 128
+num_of_iterations = y_train_reshape.shape[0] // batch_size      # consider initializing with constant value: 100,1000,...
 
 dimArray = [20,7,5,10]
 #dimArray.append(numOfClasses)           #first - input layer
