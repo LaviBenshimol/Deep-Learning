@@ -133,9 +133,11 @@ def compute_cost(AL,Y):
     categorical cross-entropy loss
     """""
     m = Y.shape[1]
-    cost = -np.sum(np.multiply(Y, np.log(AL)) + np.multiply(np.ones(Y.shape) - Y, np.log(AL))) / m
-    cost = np.squeeze(cost) #simplify shape
+    logprobs = np.multiply(np.log(AL), Y) + np.multiply(np.log(1-AL), (1-Y))
+    cost = (-1/m) * np.sum(logprobs)
+    cost = np.squeeze(cost)
     return cost
+
 
 # 2.a
 def Linear_backward(dZ,cache):
@@ -238,7 +240,8 @@ def L_model_backward(AL, Y, caches):
     Y = Y.reshape(AL.shape)  # after this line, Y is the same shape as AL
 
     # Initializing the backpropagation
-    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
+    # dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))         #not sure this is correct
+    dAL = AL - Y                                                           #trying from group
 
     # Lth layer (SIGMOID -> LINEAR) gradients. Inputs: "AL, Y, caches". Outputs: "grads["dAL"], grads["dWL"], grads["dbL"]
     current_cache = caches[L - 1]
@@ -285,10 +288,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
         #foward propagation
         AL, cache = L_model_forward(X_batch, parameters, use_batchnorm)
         cost = compute_cost(AL, Y_batch)
-        print (cost)
         grads = L_model_backward(AL, Y_batch, cache)
         parameters = update_parameters(parameters, grads, learning_rate)
-    # Print the cost every 100 training example
+        print(cost)
     return parameters, cost
 # 3.b
 def Predict(X, Y, parameters):
@@ -298,30 +300,36 @@ def Predict(X, Y, parameters):
     return labelID
 #from sklearn.preprocessing import label_binarize
 
-def arrange_dims(X,Y):
+def getMnistFlatData():
+    # Load MNIST data
+    (x_train, y_train), (x_test,y_test) = mnist.load_data()
+    max_x_train = max(x_train.reshape((x_train.shape[0] * x_train.shape[1] * x_train.shape[2])))
+    # x_train = (x_train - max_x_train / 2) / max_x_train
+    x_train = x_train / max_x_train
+    numOfClasses = len(np.unique(y_train))
+    lenImageFlattened = x_train.shape[1] *  x_train.shape[2]
+    x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
+    y_train_reshape = np.zeros((len(y_train),numOfClasses))
+    for i in range(len(y_train)):
+        y_train_reshape[i][y_train[i]] = 1
 
-# Load MNIST data
-(x_train, y_train), (x_test,y_test) = mnist.load_data()
+    return x_train_reshape,y_train_reshape, numOfClasses,lenImageFlattened
+
 
 #CACHE:
 # linear_cache = A - input of the layer(in size of the current layer), W - Weights matrix, b - biases
 # activation_cache  = Z values = A*W + b
-numOfClasses = len(np.unique(y_train))
-lenImageFlattened = x_train.shape[1] *  x_train.shape[2]
-y_train_reshape = np.zeros((len(y_train),numOfClasses))
-for i in range(len(y_train)):
-    y_train_reshape[i][y_train[i]] = 1
 
+
+x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlatData()
 use_batchnorm = False
-learning_rate = 0.009
-num_of_iteration = 100
+learning_rate = 0.009      # Hard Coded Value is: 0.009
+num_of_iteration = 10000
 
-batch_size = len(y_train) / num_of_iteration
+batch_size = 32        # y_train_reshape.shape[0] / num_of_iteration
 dimArray = [20,7,5,10]
 dimArray.append(numOfClasses)           #first - input layer
 dimArray.insert(0,lenImageFlattened)    #last - output layer
-
-x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
 
 #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
 
