@@ -44,7 +44,8 @@ def initialize_parameters(layer_dims):
 """
 # 1.b - This function performs the linear part of a layer's forward propagation
 def linear_forward(A, W, b):
-    Z = np.dot(W,A)+b
+    #Z = np.expand_dims(np.dot(W, A), axis=1)+b
+    Z = np.dot(W, A) + b
     linear_cache = (A, W, b)
     return Z,linear_cache
 """
@@ -280,18 +281,27 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
     cost = []
     #size: (batchSize,1), rangeValues = (0:60,000-1)
 
-
+    # Training phase:
     for i in range(0,num_of_iteration):
-        randIndices = np.random.choice(X.shape[0], int(batch_size))
-        X_batch = X[randIndices].transpose()
-        Y_batch = Y[randIndices].transpose()
+        #randIndices = np.random.choice(X.shape[0], int(batch_size))
+        orderedIndices = range(i * batch_size, (i+1) * batch_size)
+        X_batch_train = X[orderedIndices].transpose()
+        Y_batch_train = Y[orderedIndices].transpose()
         #foward propagation
-        AL, cache = L_model_forward(X_batch, parameters, use_batchnorm)
-        cost = compute_cost(AL, Y_batch)
-        grads = L_model_backward(AL, Y_batch, cache)
+        AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
+        cost = compute_cost(AL, Y_batch_train)
+        grads = L_model_backward(AL, Y_batch_train, cache)
         parameters = update_parameters(parameters, grads, learning_rate)
-        print(cost)
+        if (i %100 == 0):
+            print(cost)
+
+    # Validation phase:
+
+
+
+
     return parameters, cost
+
 # 3.b
 def Predict(X, Y, parameters):
     use_batchnorm = False
@@ -324,16 +334,18 @@ def getMnistFlatData():
 x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlatData()
 use_batchnorm = False
 learning_rate = 0.009      # Hard Coded Value is: 0.009
-num_of_iteration = 10000
+batch_size = 16
+num_of_iteration = y_train_reshape.shape[0] // batch_size
 
-batch_size = 32        # y_train_reshape.shape[0] / num_of_iteration
 dimArray = [20,7,5,10]
 dimArray.append(numOfClasses)           #first - input layer
-dimArray.insert(0,lenImageFlattened)    #last - output layer
+dimArray.insert(0,lenImageFlattened)    #last  - output layer
 
 #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
 
 (parameters, cost) = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iteration,batch_size)
+p = Predict(np.expand_dims(x_train_reshape[0, :], axis=1), y_train_reshape[0, :], parameters)
+
 #x_test_reshape = x_test.reshape(x_test.shape[0],784)
 #AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
 print('Finished')
