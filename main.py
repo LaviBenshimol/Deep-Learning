@@ -26,7 +26,7 @@ def initialize_parameters(layer_dims):
 
     #insert each parmeter to dictionary
     for i in range(1,num_of_layers):
-        init_dictionary['W' + str(i)] = np.random.randn(layer_dims[i] , layer_dims[i-1]) * 0.01
+        init_dictionary['W' + str(i)] = (1 + np.random.randn(layer_dims[i] , layer_dims[i-1])) * 0.0001
         init_dictionary['b' + str(i)] = np.zeros((layer_dims[i],1))
     return init_dictionary
 
@@ -72,7 +72,7 @@ Dimension of output Argument:
 
 # 1.c
 def softmax(Z):
-    sumExpZ = sum(np.exp(Z))
+    sumExpZ = np.sum(np.exp(Z), axis=0)
     A = np.exp(Z) / sumExpZ
     activation_cache = Z
     return A,activation_cache
@@ -134,8 +134,8 @@ def compute_cost(AL,Y):
     categorical cross-entropy loss
     """""
     m = Y.shape[1]
-    logprobs = np.multiply(np.log(AL), Y) + np.multiply(np.log(1-AL), (1-Y))
-    # logprobs = np.multiply(np.log(AL), Y) #Hodaya version, from the assignment,
+    #logprobs = np.multiply(np.log(AL), Y) + np.multiply(np.log(1-AL), (1-Y))
+    logprobs = np.multiply(np.log(AL), Y) #Hodaya version, from the assignment,
     cost = (-1/m) * np.sum(logprobs)
     cost = np.squeeze(cost)
     return cost
@@ -294,6 +294,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
             cost = compute_cost(AL, Y_batch_train)
             grads = L_model_backward(AL, Y_batch_train, cache)
             parameters = update_parameters(parameters, grads, learning_rate)
+            if(i%100 == 0):
+                print("Cost:    %f",cost)
 
         # Validation phase:
         randIndices = np.random.choice(X.shape[0], X.shape[0] // 5) #Validation on 20% from the training set
@@ -308,12 +310,17 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
 def Predict(X, Y, parameters):
     use_batchnorm = False
     AL, cache = L_model_forward(X,parameters,use_batchnorm)
-    countHits = 0
-    for i in range(Y.shape[1]):
-        labelID = np.argmax(AL[:,i])
-        if(labelID == argmax(Y[:,i])):
-            countHits += 1
-    accuracy = countHits * 100 / Y.shape[1]
+
+    accuracy = sum(np.argmax(AL, axis=0) == Y) / len(Y)
+
+  #  countHits = 0
+  #  for i in range(Y.shape[1]):
+  #      labelID = np.argmax(AL[i,:])
+  #      if(labelID == np.argmax(Y[i,:])):
+  #          countHits += 1
+  #  accuracy = countHits * 100 / Y.shape[1]
+
+
     return accuracy
 #from sklearn.preprocessing import label_binarize
 
@@ -342,10 +349,10 @@ x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlat
 use_batchnorm = False
 learning_rate = 0.009      # Hard Coded Value is: 0.009
 batch_size = 32
-num_of_iterations = 100      #y_train_reshape.shape[0] // batch_size
+num_of_iterations = 5000      #y_train_reshape.shape[0] // batch_size
 
 dimArray = [20,7,5,10]
-dimArray.append(numOfClasses)           #first - input layer
+#dimArray.append(numOfClasses)           #first - input layer
 dimArray.insert(0,lenImageFlattened)    #last  - output layer
 
 #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
