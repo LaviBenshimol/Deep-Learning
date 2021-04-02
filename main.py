@@ -135,6 +135,7 @@ def compute_cost(AL,Y):
     """""
     m = Y.shape[1]
     logprobs = np.multiply(np.log(AL), Y) + np.multiply(np.log(1-AL), (1-Y))
+    # logprobs = np.multiply(np.log(AL), Y) #Hodaya version, from the assignment,
     cost = (-1/m) * np.sum(logprobs)
     cost = np.squeeze(cost)
     return cost
@@ -275,29 +276,30 @@ def update_parameters(parameters, grads, learning_rate):
 
 # 3.a
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
-
     parameters = initialize_parameters(layers_dims)
     use_batchnorm = False
     cost = []
-    #size: (batchSize,1), rangeValues = (0:60,000-1)
+    numEpochs = 1
+    epsilon = 0.00001
 
-    # Training phase:
-    for i in range(0,num_of_iteration):
-        #randIndices = np.random.choice(X.shape[0], int(batch_size))
-        orderedIndices = range(i * batch_size, (i+1) * batch_size)
-        X_batch_train = X[orderedIndices].transpose()
-        Y_batch_train = Y[orderedIndices].transpose()
-        #foward propagation
-        AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
-        cost = compute_cost(AL, Y_batch_train)
-        grads = L_model_backward(AL, Y_batch_train, cache)
-        parameters = update_parameters(parameters, grads, learning_rate)
-        if (i %100 == 0):
-            print(cost)
+    for n in range(numEpochs):
+        # Training phase:
+        for i in range(0,num_iterations):
+            randIndices = np.random.choice(X.shape[0], batch_size)
+            # orderedIndices = range(i * batch_size, (i+1) * batch_size)
+            X_batch_train = X[randIndices].transpose()
+            Y_batch_train = Y[randIndices].transpose()
+            #foward propagation
+            AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
+            cost = compute_cost(AL, Y_batch_train)
+            grads = L_model_backward(AL, Y_batch_train, cache)
+            parameters = update_parameters(parameters, grads, learning_rate)
 
-    # Validation phase:
-
-
+        # Validation phase:
+        randIndices = np.random.choice(X.shape[0], X.shape[0] // 5) #Validation on 20% from the training set
+        X_batch_valid = X[randIndices].transpose()
+        Y_batch_valid = Y[randIndices].transpose()
+        acc = Predict(X_batch_valid,Y_batch_valid,parameters)
 
 
     return parameters, cost
@@ -306,16 +308,21 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
 def Predict(X, Y, parameters):
     use_batchnorm = False
     AL, cache = L_model_forward(X,parameters,use_batchnorm)
-    labelID = np.argmax(AL)
-    return labelID
+    countHits = 0
+    for i in range(Y.shape[1]):
+        labelID = np.argmax(AL[:,i])
+        if(labelID == argmax(Y[:,i])):
+            countHits += 1
+    accuracy = countHits * 100 / Y.shape[1]
+    return accuracy
 #from sklearn.preprocessing import label_binarize
 
 def getMnistFlatData():
     # Load MNIST data
     (x_train, y_train), (x_test,y_test) = mnist.load_data()
     max_x_train = max(x_train.reshape((x_train.shape[0] * x_train.shape[1] * x_train.shape[2])))
-    # x_train = (x_train - max_x_train / 2) / max_x_train
-    x_train = x_train / max_x_train
+    x_train = (x_train - max_x_train / 2) / max_x_train
+    # x_train = x_train / max_x_train
     numOfClasses = len(np.unique(y_train))
     lenImageFlattened = x_train.shape[1] *  x_train.shape[2]
     x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
@@ -334,8 +341,8 @@ def getMnistFlatData():
 x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlatData()
 use_batchnorm = False
 learning_rate = 0.009      # Hard Coded Value is: 0.009
-batch_size = 16
-num_of_iteration = y_train_reshape.shape[0] // batch_size
+batch_size = 32
+num_of_iterations = 100      #y_train_reshape.shape[0] // batch_size
 
 dimArray = [20,7,5,10]
 dimArray.append(numOfClasses)           #first - input layer
@@ -343,7 +350,7 @@ dimArray.insert(0,lenImageFlattened)    #last  - output layer
 
 #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
 
-(parameters, cost) = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iteration,batch_size)
+(parameters, cost) = L_layer_model(x_train_reshape,y_train_reshape,dimArray,learning_rate,num_of_iterations,batch_size)
 p = Predict(np.expand_dims(x_train_reshape[0, :], axis=1), y_train_reshape[0, :], parameters)
 
 #x_test_reshape = x_test.reshape(x_test.shape[0],784)
