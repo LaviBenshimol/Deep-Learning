@@ -238,16 +238,12 @@ def L_model_backward(AL, Y, caches):
     Y = Y.reshape(AL.shape)  # after this line, Y is the same shape as AL
 
     # Initializing the backpropagation
-    ### START CODE HERE ### (1 line of code)
     dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
-    ### END CODE HERE ###
 
     # Lth layer (SIGMOID -> LINEAR) gradients. Inputs: "AL, Y, caches". Outputs: "grads["dAL"], grads["dWL"], grads["dbL"]
-    ### START CODE HERE ### (approx. 2 lines)
     current_cache = caches[L - 1]
     grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = linear_activation_backward(dAL, current_cache,
                                                                                                   'softmax')
-    ### END CODE HERE ###
 
     for l in reversed(range(L - 1)):
         # lth layer: (RELU -> LINEAR) gradients.
@@ -268,11 +264,9 @@ def update_parameters(parameters, grads, learning_rate):
     L = len(parameters) // 2  # number of layers in the neural network
 
     # Update rule for each parameter. Use a for loop.
-    ### START CODE HERE ### (≈ 3 lines of code)
     for l in range(1, L + 1, 1):
         parameters["W" + str(l)] = parameters["W" + str(l)] - learning_rate * grads["dW" + str(l)]
         parameters["b" + str(l)] = parameters["b" + str(l)] - learning_rate * grads["db" + str(l)]
-    ### END CODE HERE ###
     return parameters
 
 # 3.a
@@ -304,7 +298,7 @@ def Predict(X, Y, parameters):
     return labelID
 #from sklearn.preprocessing import label_binarize
 
-#TODO:def arrange_dims(X,Y):
+def arrange_dims(X,Y):
 
 # Load MNIST data
 (x_train, y_train), (x_test,y_test) = mnist.load_data()
@@ -324,8 +318,8 @@ num_of_iteration = 100
 
 batch_size = len(y_train) / num_of_iteration
 dimArray = [20,7,5,10]
-dimArray.append(numOfClasses)
-dimArray.insert(0,lenImageFlattened)
+dimArray.append(numOfClasses)           #first - input layer
+dimArray.insert(0,lenImageFlattened)    #last - output layer
 
 x_train_reshape = x_train.reshape(x_train.shape[0],lenImageFlattened)
 
