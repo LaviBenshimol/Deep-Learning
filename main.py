@@ -9,12 +9,15 @@ def initialize_parameters(layer_dims):
     """
     init_dictionary = {}                # output array
     num_of_layers = len(layer_dims)     # number of layers in the network
-    np.random.seed(1)                   #consistent testing
+    np.random.seed(3)                   #consistent testing
 
     # insert each parmeter to dictionary
     for i in range(1, num_of_layers):
-        init_dictionary['W' + str(i)] = np.random.randn(layer_dims[i], layer_dims[i - 1]) / np.sqrt(layer_dims[i - 1])  #TODO: check which config. changed this line!#@!@#
-        #init_dictionary['W' + str(i)] = (1 + np.random.randn(layer_dims[i], layer_dims[i - 1])) * 0.0001
+        # TODO: check which config. changed this line!#@!@#
+        #init_dictionary['W' + str(i)] = np.random.randn(layer_dims[i], layer_dims[i - 1]) / np.sqrt(layer_dims[i - 1]) #discard atm
+        init_dictionary['W' + str(i)] = np.random.randn(layer_dims[i], layer_dims[i - 1]) * 0.01                        #testing
+
+        #init_dictionary['W' + str(i)] = (1 + np.random.randn(layer_dims[i], layer_dims[i - 1])) * 0.0001 #Original
         init_dictionary['b' + str(i)] = np.zeros((layer_dims[i], 1))
     return init_dictionary
 
@@ -85,6 +88,13 @@ def linear_activation_forward(A_prev, W, B, activation):
         A, activation_cache = relu(Z)
     if (activation == 'softmax'):
         A, activation_cache = softmax(Z)
+
+    # CACHE:
+    # linear_cache = (A, W, b)
+    # A : prev layer (flattened image,size of batch)
+    # W : Weights matrix (num of neurons in the next layer, num of inputs from the prev layer)
+    # b : bias weights per neuron
+    # activation_cache  = Z(size of layer, size of batch) = A*W + b
     cache = (linear_cache, activation_cache)
     return A, cache
 
@@ -135,9 +145,13 @@ def compute_cost(AL, Y):
     """""
     m = Y.shape[1]
     # logprobs = np.multiply(np.log(AL), Y) + np.multiply(np.log(1-AL), (1-Y))
-    logprobs = np.multiply(np.log(AL), Y)  # Hodaya version, from the assignment,
+
+    logprobs = np.multiply(np.log(AL), Y)
     cost = (-1 / m) * np.sum(logprobs)
     cost = np.squeeze(cost)
+
+    cost2 = -1 / m * (np.dot(Y, np.log(AL.T)) + np.dot(1 - Y, np.log(1 - AL).T))
+    cost2 = np.squeeze(cost2)
     return cost
 
 # 1.h
@@ -178,7 +192,6 @@ def Linear_backward(dZ, cache):
 
     return dA_prev, dW, db
 
-
 # 2.b
 def linear_activation_backward(dA, cache, activation):
     """
@@ -205,7 +218,6 @@ def linear_activation_backward(dA, cache, activation):
 
     return dA_prev, dW, db
 
-
 # 2.c
 def relu_backward(dA, activation_cache):
     """
@@ -225,7 +237,6 @@ def relu_backward(dA, activation_cache):
     # When z < 0, we should set dz to 0 as well.
     dZ[Z < 0] = 0
     return dZ
-
 
 # 2.d
 def softmax_backward(dA, activation_cache):
@@ -257,14 +268,12 @@ def softmax_backward(dA, activation_cache):
 
     return dZ
 
-
 # Hodaya's reference - unclear from where this pars is true: "np.multiply(dA, s, (1 - s))"
 def softmax_backward2(dA, activation_cache):
     z = activation_cache
     s = (np.exp(z).T / np.array((np.sum(np.exp(z), axis=1).T))).T
     dZ = np.multiply(dA, s, (1 - s))  # wtf
     return dZ
-
 
 # 2.e
 def L_model_backward(AL, Y, caches):
@@ -289,13 +298,13 @@ def L_model_backward(AL, Y, caches):
 
     # Initializing the backpropagation
     # dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))         #not sure this is correct
-    dAL = AL - Y  # trying from group
-
+    #dAL = AL - Y  # trying from group
+    #TODO: testing this config
+    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
     # Lth layer (SIGMOID -> LINEAR) gradients. Inputs: "AL, Y, caches". Outputs: "grads["dAL"], grads["dWL"], grads["dbL"]
     current_cache = caches[L - 1]
     grads["dA" + str(L)], grads["dW" + str(L)], grads["db" + str(L)] = linear_activation_backward(dAL, current_cache,
                                                                                                   'softmax')
-
     for l in reversed(range(L - 1)):
         # lth layer: (RELU -> LINEAR) gradients.
         # Inputs: "grads["dA" + str(l + 2)], caches".
@@ -309,7 +318,6 @@ def L_model_backward(AL, Y, caches):
         ### END CODE HERE ###
 
     return grads
-
 
 # 2.f
 def update_parameters(parameters, grads, learning_rate):
@@ -333,7 +341,6 @@ def update_parameters(parameters, grads, learning_rate):
         parameters["b" + str(l)] = parameters["b" + str(l)] - learning_rate * grads["db" + str(l)]
     return parameters
 
-
 # 3.a
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
     """
@@ -341,8 +348,6 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function, and the final layer will apply the softmax activation function.
     The size of the output layer should be equal to the number of labels in the data.
     Please select a batch size that enables your code to run well (i.e. no memory overflows while still running relatively fast).
-
-    Hint: the function should use the earlier functions in the following order: initialize -> L_model_forward -> compute_cost -> L_model_backward -> update parameters
 
     Input:
     X – the input data, a numpy array of shape (height*width , number_of_examples)
@@ -360,31 +365,55 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
     use_batchnorm = False
     cost = []
     epsilon = 0.00001
-    numEpochs = 1
+    stop_criteria = 10000
+    num_epochs = 0
 
-    for n in range(numEpochs):
-        # Training phase:
+    while stop_criteria > epsilon:
+        # start new epoch
+        num_epochs += 1
         for i in range(0, num_iterations):
             randIndices = np.random.choice(X.shape[0], batch_size)
             # orderedIndices = range(i * batch_size, (i+1) * batch_size)
             X_batch_train = X[randIndices].transpose()
             Y_batch_train = Y[randIndices].transpose()
-            # foward propagation
+            # forward propagation
             AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
             cost = compute_cost(AL, Y_batch_train)
+            # backward propagation
             grads = L_model_backward(AL, Y_batch_train, cache)
             parameters = update_parameters(parameters, grads, learning_rate)
             if (i % 100 == 0):
                 print("Cost:    %f", cost)
+                # Validation phase:
+                randIndices = np.random.choice(X.shape[0], X.shape[0] // 5)  # Validation on 20% from the training set
+                X_batch_valid = X[randIndices].transpose()
+                Y_batch_valid = Y[randIndices].transpose()
+                acc = Predict(X_batch_valid, Y_batch_valid, parameters)
 
-        # Validation phase:
-        randIndices = np.random.choice(X.shape[0], X.shape[0] // 5)  # Validation on 20% from the training set
-        X_batch_valid = X[randIndices].transpose()
-        Y_batch_valid = Y[randIndices].transpose()
-        acc = Predict(X_batch_valid, Y_batch_valid, parameters)
+                stop_criteria = abs(stop_criteria - np.squeeze(acc))
+
+    # for n in range(numEpochs):
+    #     # Training phase:
+    #     for i in range(0, num_iterations):
+    #         randIndices = np.random.choice(X.shape[0], batch_size)
+    #         # orderedIndices = range(i * batch_size, (i+1) * batch_size)
+    #         X_batch_train = X[randIndices].transpose()
+    #         Y_batch_train = Y[randIndices].transpose()
+    #         # foward propagation
+    #         AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
+    #         cost = compute_cost(AL, Y_batch_train)
+    #         grads = L_model_backward(AL, Y_batch_train, cache)
+    #         parameters = update_parameters(parameters, grads, learning_rate)
+    #         if (i % 100 == 0):
+    #             print("Cost:    %f", cost)
+    #
+    #     # Validation phase:
+    #     randIndices = np.random.choice(X.shape[0], X.shape[0] // 5)  # Validation on 20% from the training set
+    #     X_batch_valid = X[randIndices].transpose()
+    #     Y_batch_valid = Y[randIndices].transpose()
+    #     acc = Predict(X_batch_valid, Y_batch_valid, parameters)
 
     return parameters, cost
-
 
 # 3.b
 def Predict(X, Y, parameters):
@@ -415,9 +444,6 @@ def Predict(X, Y, parameters):
 
     return accuracy
 
-
-# from sklearn.preprocessing import label_binarize
-
 def getMnistFlatData():
     # Load MNIST data
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -433,16 +459,11 @@ def getMnistFlatData():
 
     return x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened
 
-
-# CACHE:
-# linear_cache = A - input of the layer(in size of the current layer), W - Weights matrix, b - biases
-# activation_cache  = Z values = A*W + b
-
 # part 4
 x_train_reshape, y_train_reshape, numOfClasses, lenImageFlattened = getMnistFlatData()  # import MNIST
 use_batchnorm = False  # batch normalization
 learning_rate = 0.009  # Hard Coded Value is: 0.009
-batch_size = 128
+batch_size = 64
 num_of_iterations = y_train_reshape.shape[0] // batch_size  # consider initializing with constant value: 100,1000,...
 dimArray = [20, 7, 5, 10]  # layers configuration
 dimArray.insert(0, lenImageFlattened)  # first - input layer
@@ -455,5 +476,4 @@ dimArray.insert(0, lenImageFlattened)  # first - input layer
 p = Predict(np.expand_dims(x_train_reshape[0, :], axis=1), y_train_reshape[0, :], parameters)
 
 # x_test_reshape = x_test.reshape(x_test.shape[0],784)
-# AL, cache = L_model_forward(x_test_reshape[0], parameters,use_batchnorm )
 print('Finished')
