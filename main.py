@@ -50,8 +50,10 @@ def softmax(Z):
     A – the activations of the layer
     activation_cache – returns Z, which will be useful for the backpropagation
     """
-    sumExpZ = np.sum(np.exp(Z), axis=0)
-    A = np.exp(Z) / sumExpZ
+    # TODO:changed this Eq
+    # sumExpZ = np.sum(np.exp(Z), axis=0)
+    # A = np.exp(Z) / sumExpZ
+    A = np.exp(Z - max(Z)) / np.sum(np.exp(a - max(Z)))
     activation_cache = Z
     return A, activation_cache
 
@@ -381,7 +383,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size):
             Y_batch_train = Y[randIndices].transpose()
             # forward propagation
             AL, cache = L_model_forward(X_batch_train, parameters, use_batchnorm)
+
             cost = compute_cost(AL, Y_batch_train)
+
             # backward propagation
             grads = L_model_backward(AL, Y_batch_train, cache)
             parameters = update_parameters(parameters, grads, learning_rate)
