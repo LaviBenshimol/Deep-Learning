@@ -34,7 +34,9 @@ def linear_forward(A, W, b):
     Z – the linear component of the activation function (i.e., the value before applying the non-linear function)
     linear_cache – a dictionary containing A, W, b (stored for making the backpropagation easier to compute)
     """
-    Z = np.dot(W, A) + b
+    #Z = np.dot(W, A) + b
+    Z = np.dot(W, A)
+    Z = Z + b
     linear_cache = (A, W, b)
     return Z, linear_cache
 
@@ -235,7 +237,8 @@ def relu_backward(dA, activation_cache):
     # just converting dz to a correct object.
     dZ = np.array(dA, copy=True)
     # When z < 0, we should set dz to 0 as well.
-    dZ[Z < 0] = 0
+    dZ[Z <= 0] = 0
+    dZ[Z > 0] = 1
     return dZ
 
 # 2.d
